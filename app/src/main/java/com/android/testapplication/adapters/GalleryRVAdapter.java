@@ -1,23 +1,19 @@
 package com.android.testapplication.adapters;
 
 import android.app.FragmentManager;
-import android.graphics.Paint;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
 import com.android.testapplication.MyApp;
 import com.android.testapplication.R;
-import com.android.testapplication.dataModels.MyDataModel;
+import com.android.testapplication.dataModels.GalleryModel;
 import com.android.testapplication.io_package.Constants;
 import com.squareup.picasso.Callback;
 
@@ -32,26 +28,23 @@ import java.util.List;
 public class GalleryRVAdapter extends RecyclerView.Adapter<GalleryRVAdapter.GalleryViewHolder> {
 
     private static final String LOG_TAG = "LOG_TAG_RVA";
-    private final List<MyDataModel> restoransList;
+    private final List<GalleryModel> adapterList;
     private String currentDate;
     FragmentManager fragmentManager;
 
-    public GalleryRVAdapter(List<MyDataModel> list) {
-        this.restoransList = list;
+    public GalleryRVAdapter(List<GalleryModel> list) {
+        this.adapterList = list;
     }
 
     public class GalleryViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
         private final ProgressBar progressView;
-        private final ViewGroup parent;
-        private View descriptionView;
         private TextView showDescrTV;
         private ImageView imageView;
-        private MyDataModel dataModel;
+        private GalleryModel dataModel;
 
         public GalleryViewHolder(final View itemView, final ViewGroup viewGroup) {
             super(itemView);
-            parent = viewGroup;
             showDescrTV = (TextView) itemView.findViewById(R.id.image_descr_tv);
             imageView = (ImageView) itemView.findViewById(R.id.image_view) ;
             progressView = (ProgressBar) itemView.findViewById(R.id.progressBarCads);
@@ -72,11 +65,11 @@ public class GalleryRVAdapter extends RecyclerView.Adapter<GalleryRVAdapter.Gall
 
     @Override
     public void onBindViewHolder(final GalleryViewHolder holder, int pos) {
-        holder.dataModel = restoransList.get(pos);
-        holder.showDescrTV.setText(restoransList.get(pos).getAuthor());
+        holder.dataModel = adapterList.get(pos);
+        holder.showDescrTV.setText(adapterList.get(pos).getAuthor());
         
         MyApp.getInstance().getPicassoInstance()
-                .load(Constants.BASE_URL + restoransList.get(pos).getFilename())
+                .load(Constants.BASE_URL + adapterList.get(pos).getFilename())
                 .fit()
                 .into(holder.imageView, new Callback() {
                     @Override
@@ -95,10 +88,10 @@ public class GalleryRVAdapter extends RecyclerView.Adapter<GalleryRVAdapter.Gall
 
     @Override
     public int getItemCount() {
-        return restoransList.size();
+        return adapterList.size();
     }
 
-    public MyDataModel getItem(int pos) {
-        return restoransList.get(pos);
+    public GalleryModel getItem(int pos) {
+        return adapterList.get(pos);
     }
 }

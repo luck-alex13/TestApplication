@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.util.Log;
 
-import com.android.testapplication.dataModels.MyDataModel;
+import com.android.testapplication.dataModels.GalleryModel;
 
 
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public class DBQueryManager {
     }
 
 
-    private ContentValues objectToContentValues(MyDataModel object) {
+    private ContentValues objectToContentValues(GalleryModel object) {
         ContentValues contentValues = new ContentValues();
 
         contentValues.put(DBHelper.ID, object.getId());
@@ -46,11 +46,11 @@ public class DBQueryManager {
         return contentValues;
     }
 
-    public void saveGalleryItem(MyDataModel dataModel) {
+    public void saveGalleryItem(GalleryModel dataModel) {
         ContentValues newValues = objectToContentValues(dataModel);
         if (!isItemExistInDB(DBHelper.TABLE_GALLERY, DBHelper.ID, String.valueOf(dataModel.getId()))) {
             this.database.insert(DBHelper.TABLE_GALLERY, null, newValues);
-            Log.d(LOG_TAG, "saveCity() " + newValues.toString());
+            Log.d(LOG_TAG, "saveGalleryItem() " + newValues.toString());
         } else {
             int affected = this.database.update(DBHelper.TABLE_GALLERY, newValues, DBHelper.ID + " = ?", new String[]{String.valueOf(dataModel.getId())});
 
@@ -58,8 +58,8 @@ public class DBQueryManager {
         }
     }
 
-    public ArrayList<MyDataModel> readGalleryItems() {
-        ArrayList<MyDataModel> list = new ArrayList<>();
+    public ArrayList<GalleryModel> readGalleryItems() {
+        ArrayList<GalleryModel> list = new ArrayList<>();
         Random random = new Random();
         long size = DatabaseUtils.queryNumEntries(this.database, DBHelper.TABLE_GALLERY);
 
@@ -68,7 +68,7 @@ public class DBQueryManager {
             int i = 0;
             do {
                 cursor.moveToPosition(random.nextInt((int) size));
-                MyDataModel myDataModel = new MyDataModel(
+                GalleryModel galleryModel = new GalleryModel(
                         cursor.getInt(cursor.getColumnIndex(DBHelper.ID)),
                         cursor.getString(cursor.getColumnIndex(DBHelper.FILE_NAME)),
                         cursor.getString(cursor.getColumnIndex(DBHelper.FORMAT)),
@@ -79,7 +79,7 @@ public class DBQueryManager {
                         cursor.getString(cursor.getColumnIndex(DBHelper.POST_URL))
                 );
 
-                list.add(myDataModel);
+                list.add(galleryModel);
 
                 i++;
                 //Log.d(LOG_TAG, "readGalleryItems() " + MyDataModel.getName());

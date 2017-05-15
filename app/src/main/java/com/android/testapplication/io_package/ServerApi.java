@@ -1,6 +1,6 @@
 package com.android.testapplication.io_package;
 
-import com.android.testapplication.dataModels.MyDataModel;
+import com.android.testapplication.dataModels.GalleryModel;
 
 import java.util.List;
 
@@ -17,6 +17,6 @@ import retrofit2.http.GET;
 public interface ServerApi {
 
     @GET(Constants.URL_API_DATA)
-    Call<List<MyDataModel>> getPhotos();
+    Call<List<GalleryModel>> getPhotos();
 
 }

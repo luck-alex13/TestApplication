@@ -12,7 +12,7 @@ import com.google.gson.annotations.SerializedName;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public class MyDataModel {
+public class GalleryModel {
 
     @SerializedName("format")
     @Expose
@@ -43,10 +43,10 @@ public class MyDataModel {
      * No args constructor for use in serialization
      *
      */
-    public MyDataModel() {
+    public GalleryModel() {
     }
 
-    public MyDataModel(String filename, String author) {
+    public GalleryModel(String filename, String author) {
         this.filename = filename;
         this.author = author;
     }
@@ -62,7 +62,7 @@ public class MyDataModel {
      * @param filename
      * @param format
      */
-    public MyDataModel( int id, String filename, String format, int width, int height,  String author, String authorUrl, String postUrl) {
+    public GalleryModel(int id, String filename, String format, int width, int height, String author, String authorUrl, String postUrl) {
         super();
         this.format = format;
         this.width = width;

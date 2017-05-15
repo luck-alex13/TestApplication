@@ -5,25 +5,21 @@ import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.android.testapplication.MainActivity;
 import com.android.testapplication.MyApp;
 import com.android.testapplication.R;
 import com.android.testapplication.adapters.GalleryRVAdapter;
-import com.android.testapplication.dataModels.MyDataModel;
+import com.android.testapplication.dataModels.GalleryModel;
 import com.android.testapplication.database.DBHelper;
 import com.android.testapplication.io_package.AppUtil;
 import com.android.testapplication.io_package.Constants;
@@ -44,16 +40,14 @@ import retrofit2.Response;
  */
 public class ListFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
     private static final String LOG_TAG = "LOG_TAG";
 
-    private String mParam1;
-    private String mParam2;
+
     private RecyclerView recyclerView;
-    private ProgressBar progressBar;
     private GalleryRVAdapter rvAdapter;
     private long cacheSize;
-    private ArrayList<MyDataModel> imagesList;
+    private ArrayList<GalleryModel> imagesList;
+    private SwipeRefreshLayout swipeContainer;
 
 
     public ListFragment() {
@@ -69,18 +63,12 @@ public class ListFragment extends Fragment {
      */
     public static ListFragment newInstance(String param1) {
         ListFragment fragment = new ListFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        fragment.setArguments(args);
         return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-        }
     }
 
     @Override
@@ -96,16 +84,24 @@ public class ListFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_list, container, false);
         recyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
-        progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
+        swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeRefreshLayout);
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                MyApp.getInstance().getDbHelperInstance().clearCache();
+                runNetworkTask();
+            }
+        });
+        swipeContainer.setColorSchemeResources(R.color.colorAccent);
         setHasOptionsMenu(true);
         startTask();
         return view;
     }
 
-    private void initRecView(final ArrayList<MyDataModel> list, Random random) {
+    private void initRecView(final ArrayList<GalleryModel> list, Random random) {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         if(random != null){
-            ArrayList<MyDataModel> randomList = new ArrayList<>();
+            ArrayList<GalleryModel> randomList = new ArrayList<>();
             for (int i = 0; i < 10; i++) {
                 randomList.add(list.get(random.nextInt(list.size())));
             }
@@ -133,27 +129,28 @@ public class ListFragment extends Fragment {
         if (AppUtil.hasConnection(MyApp.getInstance().getApplicationContext())) {
             Log.d(LOG_TAG, "runNetworkTask()");
             try {
-                progressBar.setVisibility(View.VISIBLE);
+                swipeContainer.setRefreshing(true);
                 MyApp.getInstance().getServerApi().getPhotos().enqueue(
-                        new Callback<List<MyDataModel>>() {
+                        new Callback<List<GalleryModel>>() {
                             @Override
-                            public void onResponse(Call<List<MyDataModel>> call, Response<List<MyDataModel>> response) {
+                            public void onResponse(Call<List<GalleryModel>> call, Response<List<GalleryModel>> response) {
                                 if (response.isSuccessful()) {
                                     Log.d(LOG_TAG, " isSuccessful ");
-                                    initRecView((ArrayList<MyDataModel>) response.body(), new Random());
+                                    initRecView((ArrayList<GalleryModel>) response.body(), new Random());
                                     writeInDB(response.body());
                                 } else {
                                     Log.d(LOG_TAG, "errorBody -> " + response.errorBody());
                                     Toast.makeText(getContext(), R.string.network_error, Toast.LENGTH_LONG).show();
                                 }
-                                progressBar.setVisibility(View.GONE);
+                                swipeContainer.setRefreshing(false);
+
                             }
 
                             @Override
-                            public void onFailure(Call<List<MyDataModel>> call, Throwable t) {
+                            public void onFailure(Call<List<GalleryModel>> call, Throwable t) {
                                 t.printStackTrace();
                                 Log.d(LOG_TAG, "onFailure() " + t);
-                                progressBar.setVisibility(View.GONE);
+                                swipeContainer.setRefreshing(false);
                                 Toast.makeText(getContext(), R.string.network_error, Toast.LENGTH_LONG).show();
 
                             }
@@ -172,6 +169,8 @@ public class ListFragment extends Fragment {
     }
 
     private void readDB() {
+        swipeContainer.setRefreshing(true);
+
         final Thread thread = new Thread() {
             @Override
             public void run() {
@@ -192,14 +191,14 @@ public class ListFragment extends Fragment {
         thread.start();
     }
 
-    private void writeInDB(final List<MyDataModel> body) {
+    private void writeInDB(final List<GalleryModel> body) {
         final Thread thread = new Thread() {
             @Override
             public void run() {
                 Log.d(LOG_TAG, "writeInDB()");
                 String response;
                 try {
-                    for (MyDataModel dataModel :
+                    for (GalleryModel dataModel :
                             body) {
                         MyApp.getInstance().getDbHelperInstance().query().saveGalleryItem(dataModel);
                     }
@@ -223,9 +222,9 @@ public class ListFragment extends Fragment {
             Log.d(LOG_TAG, " handleMessage() " + result);
             if (result.equals(Constants.SUCCESS_READ_DB)) {
                 initRecView(imagesList, null);
-                progressBar.setVisibility(View.GONE);
+                swipeContainer.setRefreshing(false);
             } else if (result.equals(Constants.ERROR_READ_DB)) {
-                progressBar.setVisibility(View.GONE);
+                swipeContainer.setRefreshing(false);
                 Toast.makeText(getContext(), R.string.database_error, Toast.LENGTH_LONG).show();
 
             } else if (result.equals(Constants.SUCCESS_SAVE_DB)) {
@@ -238,20 +237,4 @@ public class ListFragment extends Fragment {
         }
     };
 
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        //Log.d(LOG_TAG, "onCreateOptionsMenu called");
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.main, menu);
-        ActivityCompat.invalidateOptionsMenu(getActivity());
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        MyApp.getInstance().getDbHelperInstance().clearCache();
-        startTask();
-
-        return super.onOptionsItemSelected(item);
-    }
 }

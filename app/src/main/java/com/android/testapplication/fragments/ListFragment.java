@@ -1,10 +1,7 @@
 package com.android.testapplication.fragments;
 
 
-import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -19,15 +16,17 @@ import com.android.testapplication.MainActivity;
 import com.android.testapplication.MyApp;
 import com.android.testapplication.R;
 import com.android.testapplication.adapters.GalleryRVAdapter;
+import com.android.testapplication.adapters.RealmGalleryAdapter;
 import com.android.testapplication.dataModels.GalleryModel;
-import com.android.testapplication.database.DBHelper;
 import com.android.testapplication.io_package.AppUtil;
 import com.android.testapplication.io_package.Constants;
+import com.android.testapplication.database.RealmController;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
+import io.realm.Realm;
+import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -48,6 +47,7 @@ public class ListFragment extends Fragment {
     private long cacheSize;
     private ArrayList<GalleryModel> imagesList;
     private SwipeRefreshLayout swipeContainer;
+    private Realm realm;
 
 
     public ListFragment() {
@@ -69,6 +69,8 @@ public class ListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        realm = RealmController.with(this).getRealm();
+
     }
 
     @Override
@@ -88,39 +90,32 @@ public class ListFragment extends Fragment {
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                MyApp.getInstance().getDbHelperInstance().clearCache();
+                MyApp.getInstance().clearDataBase();
                 runNetworkTask();
             }
         });
         swipeContainer.setColorSchemeResources(R.color.colorAccent);
-        setHasOptionsMenu(true);
         startTask();
         return view;
     }
 
-    private void initRecView(final ArrayList<GalleryModel> list, Random random) {
+    private void initRecView(RealmResults<GalleryModel> realmResults) {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        if(random != null){
-            ArrayList<GalleryModel> randomList = new ArrayList<>();
-            for (int i = 0; i < 10; i++) {
-                randomList.add(list.get(random.nextInt(list.size())));
-            }
-            rvAdapter = new GalleryRVAdapter(randomList);
-        }else {
-            rvAdapter = new GalleryRVAdapter(list);
-        }
-
+        rvAdapter = new GalleryRVAdapter(getContext());
         recyclerView.setAdapter(rvAdapter);
-
+        RealmGalleryAdapter realmAdapter = new RealmGalleryAdapter(getContext(), realmResults, true);
+        // Set the data and tell the RecyclerView to draw
+        rvAdapter.setRealmAdapter(realmAdapter);
+        rvAdapter.notifyDataSetChanged();
+        swipeContainer.setRefreshing(false);
     }
 
     private void startTask() {
 
-        cacheSize = MyApp.getInstance().getDbHelperInstance().getRowsNumber(DBHelper.TABLE_GALLERY);
-        if (cacheSize == 0) {
-            runNetworkTask();
-        } else {
+        if (RealmController.getInstance().hasGalleryModels()) {
             readDB();
+        } else {
+            runNetworkTask();
         }
 
     }
@@ -136,14 +131,18 @@ public class ListFragment extends Fragment {
                             public void onResponse(Call<List<GalleryModel>> call, Response<List<GalleryModel>> response) {
                                 if (response.isSuccessful()) {
                                     Log.d(LOG_TAG, " isSuccessful ");
-                                    initRecView((ArrayList<GalleryModel>) response.body(), new Random());
-                                    writeInDB(response.body());
+                                    List<GalleryModel> booksList = response.body();
+                                    realm.beginTransaction();
+                                    realm.copyToRealm(booksList);
+                                    realm.commitTransaction();
+                                    initRecView(RealmController.getInstance().getGalleryModels());
+
+                                    Log.d(LOG_TAG, Constants.SUCCESS_SAVE_DB);
                                 } else {
                                     Log.d(LOG_TAG, "errorBody -> " + response.errorBody());
                                     Toast.makeText(getContext(), R.string.network_error, Toast.LENGTH_LONG).show();
+                                    swipeContainer.setRefreshing(false);
                                 }
-                                swipeContainer.setRefreshing(false);
-
                             }
 
                             @Override
@@ -160,7 +159,6 @@ public class ListFragment extends Fragment {
             } catch (NullPointerException e) {
                 e.printStackTrace();
                 Log.d(LOG_TAG, "NullPointerException() " + e);
-
             }
         } else {
             Log.d(LOG_TAG, "NoConnection");
@@ -170,71 +168,14 @@ public class ListFragment extends Fragment {
 
     private void readDB() {
         swipeContainer.setRefreshing(true);
-
-        final Thread thread = new Thread() {
-            @Override
-            public void run() {
-                String response;
-                Log.d(LOG_TAG, "readDB()");
-                try {
-                    imagesList = MyApp.getInstance().getDbHelperInstance().query().readGalleryItems();
-                    response = Constants.SUCCESS_READ_DB;
-                } catch (SQLiteException ex) {
-                    ex.printStackTrace();
-                    response = Constants.ERROR_READ_DB;
-                }
-                Message message = handler.obtainMessage(1, response);
-                handler.sendMessage(message);
-            }
-        };
-        thread.setPriority(5);
-        thread.start();
+        Log.d(LOG_TAG, "readDB()");
+        initRecView(RealmController.getInstance().getGalleryModels());
     }
 
-    private void writeInDB(final List<GalleryModel> body) {
-        final Thread thread = new Thread() {
-            @Override
-            public void run() {
-                Log.d(LOG_TAG, "writeInDB()");
-                String response;
-                try {
-                    for (GalleryModel dataModel :
-                            body) {
-                        MyApp.getInstance().getDbHelperInstance().query().saveGalleryItem(dataModel);
-                    }
-                    response = Constants.SUCCESS_SAVE_DB;
-                } catch (SQLiteException ex) {
-                    ex.printStackTrace();
-                    response = Constants.ERROR_SAVE_DB;
-                }
-                Message message = handler.obtainMessage(1, response);
-                handler.sendMessage(message);
-            }
-        };
-        thread.setPriority(5);
-        thread.start();
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        RealmController.getInstance().getRealm().close();
     }
-
-    private Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message message) {
-            final String result = (String) message.obj;
-            Log.d(LOG_TAG, " handleMessage() " + result);
-            if (result.equals(Constants.SUCCESS_READ_DB)) {
-                initRecView(imagesList, null);
-                swipeContainer.setRefreshing(false);
-            } else if (result.equals(Constants.ERROR_READ_DB)) {
-                swipeContainer.setRefreshing(false);
-                Toast.makeText(getContext(), R.string.database_error, Toast.LENGTH_LONG).show();
-
-            } else if (result.equals(Constants.SUCCESS_SAVE_DB)) {
-
-            } else if (result.equals(Constants.ERROR_SAVE_DB)) {
-
-            }
-
-
-        }
-    };
-
 }

@@ -12,7 +12,10 @@ import com.google.gson.annotations.SerializedName;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public class GalleryModel {
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
+
+public class GalleryModel extends RealmObject {
 
     @SerializedName("format")
     @Expose
@@ -26,6 +29,8 @@ public class GalleryModel {
     @SerializedName("filename")
     @Expose
     private String filename;
+
+    @PrimaryKey
     @SerializedName("id")
     @Expose
     private int id;
@@ -138,9 +143,6 @@ public class GalleryModel {
         this.postUrl = postUrl;
     }
 
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
-    }
+
 
 }

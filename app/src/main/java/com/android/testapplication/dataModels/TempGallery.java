@@ -1,21 +1,20 @@
 package com.android.testapplication.dataModels;
 
-/**
- * TestApplication
- * Created by Alex on 13.05.2017.
- * contact on luck.alex13@gmail.com
- * © Alexander Novikov 2017
- */
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
-public class GalleryModel extends RealmObject {
+/**
+ * TestApplication
+ * Created by Alex on 18.05.2017.
+ * contact on luck.alex13@gmail.com
+ * © Alexander Novikov 2017
+ */
+
+public class TempGallery extends RealmObject {
 
     @SerializedName("format")
     @Expose
@@ -48,13 +47,9 @@ public class GalleryModel extends RealmObject {
      * No args constructor for use in serialization
      *
      */
-    public GalleryModel() {
+    public TempGallery() {
     }
 
-    public GalleryModel(String filename, String author) {
-        this.filename = filename;
-        this.author = author;
-    }
 
     /**
      *
@@ -67,7 +62,7 @@ public class GalleryModel extends RealmObject {
      * @param filename
      * @param format
      */
-    public GalleryModel(int id, String filename, String format, int width, int height, String author, String authorUrl, String postUrl) {
+    public TempGallery(int id, String filename, String format, int width, int height, String author, String authorUrl, String postUrl) {
         super();
         this.format = format;
         this.width = width;
@@ -77,6 +72,10 @@ public class GalleryModel extends RealmObject {
         this.author = author;
         this.authorUrl = authorUrl;
         this.postUrl = postUrl;
+    }
+
+    public static TempGallery copyFrom(GalleryModel galleryModel){
+        return new TempGallery(galleryModel.getId(),galleryModel.getFilename(),galleryModel.getFormat(),galleryModel.getWidth(),galleryModel.getHeight(),galleryModel.getAuthor(),galleryModel.getAuthorUrl(),galleryModel.getPostUrl());
     }
 
     public String getFormat() {

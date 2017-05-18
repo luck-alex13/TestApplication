@@ -6,8 +6,12 @@ import android.app.Application;
 import android.support.v4.app.Fragment;
 
 import com.android.testapplication.dataModels.GalleryModel;
+import com.android.testapplication.dataModels.TempGallery;
+
+import java.util.Random;
 
 import io.realm.Realm;
+import io.realm.RealmObject;
 import io.realm.RealmResults;
 import io.realm.Sort;
 
@@ -62,23 +66,30 @@ public class RealmController {
     }
 
     //clear all objects from GalleryModel.class
-    public void clearAll() {
+    public void clearAll(Class aClass) {
 
         realm.beginTransaction();
-        realm.clear(GalleryModel.class);
+        realm.clear(aClass);
         realm.commitTransaction();
     }
 
     //find all objects in the GalleryModel.class
     public RealmResults<GalleryModel> getGalleryModels() {
+        return realm.where(GalleryModel.class).findAll();
+    }
 
-        return realm.where(GalleryModel.class).findAllSorted("filename", Sort.DESCENDING);
+    public RealmResults<TempGallery> getTempGalleryModels() {
+        return realm.where(TempGallery.class).findAll();
     }
 
     //query a single item with the given id
-    public GalleryModel getGalleryModel(String id) {
+    public RealmObject getDataById(Class aClass, int id) {
+        return realm.where(aClass).equalTo("id", id).findFirst();
+    }
 
-        return realm.where(GalleryModel.class).equalTo("id", id).findFirst();
+    public boolean isExist(Class aClass, int id){
+        RealmObject realmObject = getDataById(aClass, id);
+        return realmObject == null;
     }
 
     public void saveGalleryItem(GalleryModel galleryModel) {
@@ -92,6 +103,8 @@ public class RealmController {
 
         return !realm.allObjects(GalleryModel.class).isEmpty();
     }
-
+    public boolean hasTempModels() {
+        return !realm.allObjects(TempGallery.class).isEmpty();
+    }
 
 }

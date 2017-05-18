@@ -18,12 +18,14 @@ import com.android.testapplication.R;
 import com.android.testapplication.adapters.GalleryRVAdapter;
 import com.android.testapplication.adapters.RealmGalleryAdapter;
 import com.android.testapplication.dataModels.GalleryModel;
+import com.android.testapplication.dataModels.TempGallery;
 import com.android.testapplication.io_package.AppUtil;
 import com.android.testapplication.io_package.Constants;
 import com.android.testapplication.database.RealmController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -90,7 +92,7 @@ public class ListFragment extends Fragment {
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                MyApp.getInstance().clearDataBase();
+                RealmController.getInstance().clearAll(GalleryModel.class);
                 runNetworkTask();
             }
         });
@@ -99,7 +101,7 @@ public class ListFragment extends Fragment {
         return view;
     }
 
-    private void initRecView(RealmResults<GalleryModel> realmResults) {
+    private void initRecView(RealmResults<TempGallery> realmResults) {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         rvAdapter = new GalleryRVAdapter(getContext());
         recyclerView.setAdapter(rvAdapter);
@@ -135,7 +137,8 @@ public class ListFragment extends Fragment {
                                     realm.beginTransaction();
                                     realm.copyToRealm(booksList);
                                     realm.commitTransaction();
-                                    initRecView(RealmController.getInstance().getGalleryModels());
+
+                                    initRecView(getRandomList(RealmController.getInstance().getGalleryModels()));
 
                                     Log.d(LOG_TAG, Constants.SUCCESS_SAVE_DB);
                                 } else {
@@ -166,10 +169,27 @@ public class ListFragment extends Fragment {
         }
     }
 
+    private RealmResults<TempGallery> getRandomList(RealmResults<GalleryModel> originalList) {
+        Log.d(LOG_TAG, "getRandomList()");
+        RealmController.getInstance().clearAll(TempGallery.class);
+        Random random = new Random();
+        for (int i = 0; i < 10; i++) {
+            TempGallery temp = TempGallery.copyFrom(originalList.get(random.nextInt(originalList.size())));
+            while (!RealmController.getInstance().isExist(TempGallery.class, temp.getId())) {
+                temp = TempGallery.copyFrom(originalList.get(random.nextInt(originalList.size())));
+            }
+            realm.beginTransaction();
+            realm.copyToRealm(temp);
+            realm.commitTransaction();
+            Log.d(LOG_TAG, "TempGallery" + temp.getId());
+        }
+        return RealmController.getInstance().getTempGalleryModels();
+    }
+
     private void readDB() {
         swipeContainer.setRefreshing(true);
         Log.d(LOG_TAG, "readDB()");
-        initRecView(RealmController.getInstance().getGalleryModels());
+        initRecView(getRandomList(RealmController.getInstance().getGalleryModels()));
     }
 
 

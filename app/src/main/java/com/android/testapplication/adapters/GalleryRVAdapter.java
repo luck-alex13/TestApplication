@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.android.testapplication.MyApp;
 import com.android.testapplication.R;
 import com.android.testapplication.dataModels.GalleryModel;
+import com.android.testapplication.dataModels.TempGallery;
 import com.android.testapplication.io_package.Constants;
 import com.android.testapplication.database.RealmController;
 import com.squareup.picasso.Callback;
@@ -26,7 +27,7 @@ import io.realm.Realm;
  * Contact on luck.alex13@gmail.com
  * Copyright Aleksandr Novikov 2016
  */
-public class GalleryRVAdapter  extends RealmRecyclerViewAdapter<GalleryModel> {
+public class GalleryRVAdapter  extends RealmRecyclerViewAdapter<TempGallery> {
 
     private static final String LOG_TAG = "LOG_TAG_RVA";
     //private final List<GalleryModel> adapterList;
@@ -43,7 +44,7 @@ public class GalleryRVAdapter  extends RealmRecyclerViewAdapter<GalleryModel> {
         private final ProgressBar progressView;
         private TextView showDescrTV;
         private ImageView imageView;
-        private GalleryModel dataModel;
+        private TempGallery dataModel;
 
         public GalleryViewHolder(final View itemView, final ViewGroup viewGroup) {
             super(itemView);
@@ -69,7 +70,7 @@ public class GalleryRVAdapter  extends RealmRecyclerViewAdapter<GalleryModel> {
     public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
         realm = RealmController.getInstance().getRealm();
         // get the article
-        final GalleryModel item = getItem(position);
+        final TempGallery item = getItem(position);
         // cast the generic view holder to our specific one
         final GalleryViewHolder holder = (GalleryViewHolder) viewHolder;
         holder.dataModel = item;

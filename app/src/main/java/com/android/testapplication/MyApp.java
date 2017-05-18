@@ -78,9 +78,6 @@ public class MyApp extends Application {
         return serverApi;
     }
 
-    public void clearDataBase(){
-        RealmController.getInstance().clearAll();
-    }
 
 
     public static MyApp getInstance() {

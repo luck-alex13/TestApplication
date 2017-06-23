@@ -12,5 +12,7 @@
     <string name="network_error">Произошла сетевая ошибка</string>
     <string name="error_nointernet">Нет соединения с сетью интернет. Проверьте настройки и попробуйте еще раз.</string>
     <string name="database_error">Произошла ошибка при чтении данных из кэша.</string>
+    <string name="next_bonus">Cледующий бонус через: %s</string>
+    <string name="html_text" ><![CDATA[<b>1) Найдите игру в Google Play с такой же иконой как в задании<br /><br />2) Установите игру<br /><br /><font color="#9A1D1D">3) Запустите приложение больше чем на 30 сек.</font></b>]]></string>
 
 </resources>

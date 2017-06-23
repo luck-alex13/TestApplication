@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:card="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="100dp"
+    android:orientation="vertical"
+    android:layout_marginLeft="@dimen/activity_horizontal_margin"
+    android:layout_marginRight="@dimen/activity_horizontal_margin"
+    >
+
+    <RelativeLayout
+        android:id="@+id/left_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/circle_image"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@mipmap/ic_launcher_round"
+            app:civ_border_color="#F17F54"
+            app:civ_border_width="6dp" />
+
+        <View
+            android:layout_width="6dp"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/circle_image"
+            android:layout_centerInParent="true"
+            android:background="@color/dividerLightGrey" />
+    </RelativeLayout>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginStart="@dimen/activity_vertical_margin"
+        android:layout_toRightOf="@+id/left_view"
+        android:layout_toEndOf="@+id/left_view"
+        android:clickable="true"
+        android:foreground="?android:attr/selectableItemBackground"
+        app:contentPadding="@dimen/activity_horizontal_margin_half"
+        card:cardCornerRadius="@dimen/card_view_brd_radius"
+        card:cardElevation="8dp"
+        card:cardUseCompatPadding="true">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/user_name_rating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:text="User Name"
+                android:textColor="@color/primaryTextBlack"
+                android:textSize="@dimen/text_size_medium" />
+
+            <TextView
+                android:id="@+id/user_balance_rating"
+                android:layout_below="@+id/user_name_rating"
+                android:layout_marginLeft="@dimen/activity_horizontal_margin_half"
+                android:layout_marginTop="@dimen/activity_horizontal_margin_half"
+                android:textSize="@dimen/text_size_small_med"
+                android:text="200 рублей"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </RelativeLayout>
+
+    </android.support.v7.widget.CardView>
+
+</RelativeLayout>
